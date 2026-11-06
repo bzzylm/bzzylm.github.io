@@ -20,6 +20,7 @@
 
   /* ---------- 主题切换 ---------- */
   const themeBtn = document.getElementById("themeToggle");
+  const isZh = (root.lang || "").toLowerCase().indexOf("zh") === 0;
 
   const syncThemeUI = () => {
     const isDark = root.dataset.theme !== "light";
@@ -28,8 +29,17 @@
     }
     if (!themeBtn) return;
     themeBtn.setAttribute("aria-pressed", String(isDark));
-    themeBtn.setAttribute("aria-label", isDark ? "切换到浅色主题" : "切换到深色主题");
-    themeBtn.setAttribute("title", isDark ? "浅色（学术风）" : "深色");
+    themeBtn.setAttribute(
+      "aria-label",
+      isZh
+        ? isDark
+          ? "切换到浅色主题"
+          : "切换到深色主题"
+        : isDark
+        ? "Switch to light theme"
+        : "Switch to dark theme"
+    );
+    themeBtn.setAttribute("title", isZh ? (isDark ? "浅色（学术风）" : "深色") : isDark ? "Light" : "Dark");
   };
 
   if (themeBtn) {
@@ -52,6 +62,40 @@
     printBtn.addEventListener("click", () => {
       window.print();
     });
+  }
+
+  /* ---------- 顶部导航：滚动态 ---------- */
+  const nav = document.getElementById("siteNav");
+  if (nav) {
+    const onScroll = () => {
+      nav.classList.toggle("scrolled", window.scrollY > 6);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+  }
+
+  /* ---------- 顶部导航：当前区块高亮 ---------- */
+  const navLinks = Array.prototype.slice.call(
+    document.querySelectorAll('.nav-links a[href^="#"]')
+  );
+  const sections = navLinks
+    .map((link) => document.querySelector(link.getAttribute("href")))
+    .filter(Boolean);
+
+  if ("IntersectionObserver" in window && sections.length) {
+    const spy = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const id = "#" + entry.target.id;
+          navLinks.forEach((link) => {
+            link.classList.toggle("active", link.getAttribute("href") === id);
+          });
+        });
+      },
+      { rootMargin: "-45% 0px -50% 0px", threshold: 0 }
+    );
+    sections.forEach((section) => spy.observe(section));
   }
 
   /* ---------- 渐入 ---------- */
